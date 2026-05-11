@@ -2,6 +2,7 @@ package uMonitoreoGyP.demo.Controller;
 
 import java.util.UUID;
 import java.util.List;
+import java.util.Map; 
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,15 +17,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import uMonitoreoGyP.demo.Model.Notificacion;
+import uMonitoreoGyP.demo.Service.CorreoService;
 import uMonitoreoGyP.demo.Service.NotificacionService;
 
 @RestController
 @RequestMapping("api/notificaciones")
-@CrossOrigin(origins = "*") // Configuracion de CORS para poder acceder desde internet
+@CrossOrigin(origins = "*") 
 public class NotificacionController {
 
     @Autowired
     private NotificacionService notificacionService;
+
+    @Autowired
+    private CorreoService correoService;
 
     @PostMapping("/crea")
     public ResponseEntity<Notificacion> crear(@RequestBody Notificacion notificacion) {
@@ -59,5 +64,26 @@ public class NotificacionController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/enviar")
+    public ResponseEntity<?> enviarAlerta(@RequestBody Map<String, String> request) {
+        
+        String alertaId = request.get("alertaId");
+        String medioEnvio = request.get("medioEnvio");
+        String correoDestino = "jperezcaniulef.21@gmail.com"; 
+
+        if ("EMAIL".equalsIgnoreCase(medioEnvio)) {
+            String asunto = "🚨 ALERTA DE INCENDIO: Nuevo foco registrado";
+            String mensaje = "Se ha reportado un nuevo foco o actualización en el monitoreo.\n\n"
+                           + "ID de la alerta: " + alertaId + "\n"
+                           + "Por favor, revise el panel de monitoreo inmediatamente.";
+
+            correoService.enviarCorreo(correoDestino, asunto, mensaje);
+            
+            return ResponseEntity.ok().body("{\"success\": true, \"mensaje\": \"Correo enviado exitosamente\"}");
+        }
+
+        return ResponseEntity.badRequest().body("{\"success\": false, \"mensaje\": \"Medio de envío no soportado\"}");
     }
 }
