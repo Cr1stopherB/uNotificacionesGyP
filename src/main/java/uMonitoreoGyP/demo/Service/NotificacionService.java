@@ -13,34 +13,53 @@ import uMonitoreoGyP.demo.Repository.NotificacionRepository;
 
 @Service
 public class NotificacionService {
+
     @Autowired
     private NotificacionRepository repository;
+
+    @Autowired
+    private CorreoService correoService;
 
     public Notificacion crear(Notificacion notificacion) {
         notificacion.setFechaEnvio(LocalDateTime.now());
         notificacion.setLeida(false);
         return repository.save(notificacion);
     }
+    
+    public void procesarYEnviarAlerta(String alertaId, String medioEnvio, String correoDestino, String usuarioIdStr) {
+    
+        String asunto = "🚨 ALERTA DE INCENDIO: Nuevo foco registrado";
+        String cuerpo = "Se ha reportado un nuevo foco o actualización en el monitoreo.\n\n"
+                      + "ID de la alerta: " + alertaId + "\n"
+                      + "Por favor, revise el panel de monitoreo inmediatamente.";
 
-    public List<Notificacion> obtenerTodas() {
-        return repository.findAll();
+        correoService.enviarCorreo(correoDestino, asunto, cuerpo);
+
+        Notificacion notificacion = new Notificacion();
+        notificacion.setMedioEnvio(medioEnvio);
+        
+        if (alertaId != null && !alertaId.isBlank()) {
+            notificacion.setAlertaId(UUID.fromString(alertaId));
+        }
+        if (usuarioIdStr != null && !usuarioIdStr.isBlank()) {
+            notificacion.setUsuarioId(UUID.fromString(usuarioIdStr));
+        }
+        
+        this.crear(notificacion);
     }
 
-    public Optional<Notificacion> obtenerPorId(UUID id) {
-        return repository.findById(id);
-    }
+    public List<Notificacion> obtenerTodas() { return repository.findAll(); }
+    public Optional<Notificacion> obtenerPorId(UUID id) { return repository.findById(id); }
 
     public Notificacion actualizar(UUID id, Notificacion detalles) {
         return repository.findById(id).map(notif -> {
-            // Lógica inteligente: Si pasa de 'no leída' a 'leída', grabamos la hora exacta
             if (detalles.isLeida() && !notif.isLeida()) {
                 notif.setFechaLectura(LocalDateTime.now());
             }
             notif.setLeida(detalles.isLeida());
             notif.setMedioEnvio(detalles.getMedioEnvio());
-            
             return repository.save(notif);
-        }).orElse(null); // Retorno de null para que el Controller lance el 404
+        }).orElse(null);
     }
 
     public boolean eliminar(UUID id) {

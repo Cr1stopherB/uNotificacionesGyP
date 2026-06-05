@@ -1,24 +1,36 @@
 package uMonitoreoGyP.demo.Service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CorreoService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
 
+    @Value("${spring.mail.username}")
+    private String remitente;
+
+    public CorreoService(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+    }
+
+    @Async
     public void enviarCorreo(String destinatario, String asunto, String mensaje) {
-        SimpleMailMessage email = new SimpleMailMessage();
-        email.setFrom("jperezcaniulef.21@gmail.com"); 
-        email.setTo(destinatario);
-        email.setSubject(asunto);
-        email.setText(mensaje);
+        try {
+            SimpleMailMessage email = new SimpleMailMessage();
+            email.setFrom(remitente);
+            email.setTo(destinatario);
+            email.setSubject(asunto);
+            email.setText(mensaje);
 
-        mailSender.send(email);
-        System.out.println("Correo enviado exitosamente a: " + destinatario);
+            mailSender.send(email);
+            System.out.println("[SMTP] Correo enviado exitosamente a: " + destinatario);
+        } catch (Exception e) {
+            System.err.println("[SMTP] Error crítico al enviar correo a " + destinatario + ". Detalle: " + e.getMessage());
+        }
     }
 }
