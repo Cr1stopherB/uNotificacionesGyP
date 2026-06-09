@@ -18,7 +18,7 @@ public class CorreoService {
         this.mailSender = mailSender;
     }
 
-    //@Async
+    @Async
     public void enviarCorreo(String destinatario, String asunto, String mensaje) {
         try {
             SimpleMailMessage email = new SimpleMailMessage();
