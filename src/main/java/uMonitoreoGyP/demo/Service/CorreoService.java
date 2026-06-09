@@ -11,7 +11,7 @@ public class CorreoService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
+    @Value("${MAIL_USERNAME}")
     private String remitente;
 
     public CorreoService(JavaMailSender mailSender) {
