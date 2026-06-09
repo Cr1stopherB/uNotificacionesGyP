@@ -77,8 +77,6 @@ public ResponseEntity<?> enviarAlerta(@RequestBody Map<String, String> request) 
     String medioEnvio    = request.get("medioEnvio");
     String correoDestino = request.get("correoDestino");
     String usuarioIdStr  = request.get("usuarioId");
-    
-    // 🚀 CAPTURAMOS LOS NUEVOS CAMPOS DINÁMICOS DEL FRONT
     String asunto        = request.get("asunto");
     String mensaje       = request.get("mensaje");
 
@@ -89,7 +87,6 @@ public ResponseEntity<?> enviarAlerta(@RequestBody Map<String, String> request) 
 
     if (medioEnvio != null && "EMAIL".equalsIgnoreCase(medioEnvio.trim())) {
         
-        // 🔍 Si el front no mandó asunto o mensaje, le ponemos uno por defecto para que no falle
         if (asunto == null || asunto.isBlank()) {
             asunto = "🚨 ALERTA DE MONITOREO: Actualización de Incendio";
         }
@@ -97,10 +94,8 @@ public ResponseEntity<?> enviarAlerta(@RequestBody Map<String, String> request) 
             mensaje = "Se ha registrado una nueva alerta en el sistema de monitoreo. ID: " + alertaId;
         }
 
-        // Se envía el texto dinámico que viene desde el Front/Postman
         correoService.enviarCorreo(correoDestino, asunto, mensaje);
 
-        // Guardar el registro histórico en Postgres
         Notificacion notificacion = new Notificacion();
         notificacion.setMedioEnvio(medioEnvio.trim().toUpperCase());
         if (alertaId != null && !alertaId.isBlank()) {
